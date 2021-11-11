@@ -1,0 +1,24 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: npm-build
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: install
+      image: quay.io/bitnami/node:12
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - npm install
+      workingDir: $(workspaces.source.path)
+    - name: build
+      image: quay.io/bitnami/node:12
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - npm run build
+      workingDir: $(workspaces.source.path)

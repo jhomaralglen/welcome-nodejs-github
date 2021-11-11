@@ -1,0 +1,27 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: event-listener-welcome-nodejs-github
+spec:
+  serviceAccountName: pipeline
+  triggers:
+    - name: github-push-listener
+      interceptors:
+        - github:
+            secretRef:
+              secretName: webhook-interceptor
+              secretKey: secretToken
+            eventTypes:
+              - push
+        - cel:
+            overlays:
+              - key: git-ref
+                expression: "body.ref.replace('refs/heads/','').replace('main', 'production')"
+            filter: >-
+              (body.ref == ('refs/heads/main') ||
+              body.ref == ('refs/heads/develop'))
+      bindings:
+        - ref: welcome-nodejs-github-trigger-binding
+        - ref: github-trigger-binding
+      template:
+        ref: welcome-nodejs-github-trigger-template

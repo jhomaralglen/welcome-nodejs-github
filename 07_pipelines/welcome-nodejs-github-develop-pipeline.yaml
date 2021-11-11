@@ -1,0 +1,103 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: welcome-nodejs-github-develop-pipeline
+spec:
+  params:
+    - name: git-driver
+    - name: git-revision
+    - name: git-repo-name
+    - name: git-repo-path
+    - name: git-repo-url
+    - name: git-ref
+    - name: namespace
+  resources:
+    - name: git-repo
+      type: git
+    - name: built-image
+      type: image
+  workspaces:
+    - name: myworkspace
+  tasks:
+    - name: git-clone
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: myworkspace
+      params:
+        - name: revision
+          value: $(params.git-revision)
+        - name: url
+          value: $(params.git-repo-url)
+        - name: deleteExisting
+          value: "true"
+    - name: npm-build
+      taskRef:
+        name: npm-build
+      runAfter:
+        - git-clone
+      workspaces:
+        - name: source
+          workspace: myworkspace
+    - name: npm-lint
+      taskRef:
+        name: npm-lint
+      runAfter:
+        - npm-build
+      workspaces:
+        - name: source
+          workspace: myworkspace
+    - name: npm-test
+      taskRef:
+        name: npm-test
+      runAfter:
+        - npm-lint
+      workspaces:
+        - name: source
+          workspace: myworkspace
+    - name: build-and-push-to-registry
+      taskRef:
+        name: build-and-push-to-registry
+      runAfter:
+        - npm-test
+      resources:
+        inputs:
+          - name: built-image
+            resource: built-image
+      params:
+        - name: revision
+          value: $(params.git-revision)
+      workspaces:
+        - name: source
+          workspace: myworkspace
+    - name: update-image
+      taskRef:
+        kind: ClusterTask
+        name: image-updater
+      runAfter:
+        -  build-and-push-to-registry
+      params:
+        - name: driver
+          value: $(params.git-driver)
+        - name: api-endpoint
+          value: ""
+        - name: file-path
+          value: "overlays/$(params.git-ref)/deploymentconfig.patch.yaml"
+        - name: image-repo
+          value: "image-registry.openshift-image-registry.svc:5000/jhomar-welcome-github/$(params.git-repo-name)"
+        - name: new-image-url
+          value: "image-registry.openshift-image-registry.svc:5000/jhomar-welcome-github/$(params.git-repo-name):$(params.git-revision)"
+        - name: source-branch
+          value: "config"
+        - name: source-repo
+          value: $(params.git-repo-path)
+        - name: update-key
+          value: "spec.template.spec.containers.0.image"
+        - name: insecure
+          value: "true"
+        - name: branch-generate-name
+          value: ""
+        - name: image-updater-secret
+          value: github-credentials

@@ -1,0 +1,56 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-and-push-to-registry
+spec:
+  resources:
+    inputs:
+      - name: built-image
+        type: image
+  params:
+    - name: storage-driver
+      description: Set buildah storage driver
+      default: overlay
+    - name: dockerfile
+      description: Path to the Dockerfile to build.
+      default: ./Dockerfile
+    - name: revision
+      description: SHA value of repo
+  workspaces:
+    - name: source
+  steps:
+    - name: build-image
+      image: quay.io/buildah/stable:latest
+      workingDir: $(workspaces.source.path)
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - >-
+          buildah --storage-driver=$(params.storage-driver) 
+          bud --no-cache -f $(params.dockerfile) 
+          -t $(resources.inputs.built-image.url):$(params.revision) .
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - name: varlibcontainers
+          mountPath: /var/lib/containers
+    - name: push-image-to-internal-registry
+      image: quay.io/buildah/stable:latest
+      workingDir: $(workspaces.source.path)
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - >-
+          buildah --storage-driver=$(params.storage-driver) 
+          push --tls-verify=false 
+          $(resources.inputs.built-image.url):$(params.revision)
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - name: varlibcontainers
+          mountPath: /var/lib/containers
+  volumes:
+    - name: varlibcontainers
+      emptyDir: {}

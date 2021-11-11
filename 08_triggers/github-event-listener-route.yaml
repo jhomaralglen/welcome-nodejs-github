@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    eventlistener: event-listener-welcome-nodejs-github
+  name: event-listener-welcome-nodejs-github
+spec:
+  port:
+    targetPort: http-listener
+  tls: 
+    termination: edge
+  to:
+    kind: Service
+    name: el-event-listener-welcome-nodejs-github

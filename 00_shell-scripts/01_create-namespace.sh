@@ -1,0 +1,1 @@
+oc new-project jhomar-welcome-github --display-name='Jhomar Welcome GitHub' --description "jhomar-welcome-github namespace"

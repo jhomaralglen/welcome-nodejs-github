@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: environment-variables-welcome-nodejs-github-develop
+type: Opaque
+stringData:
+  CLUSTER: OPENSHIFT
+  ENVIRONMENT: DEVELOP GH
+  LAPTOP: MacBook Pro 2019
+  LOCATION: Tarlac
+  VERSION: 10.10.10
+  ZONE: EAST

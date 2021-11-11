@@ -1,0 +1,1 @@
+argocd proj create jhomar-welcome-github -d https://kubernetes.default.svc,jhomar-welcome-github --description "jhomar-welcome-github project" -s "*"

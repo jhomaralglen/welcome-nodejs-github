@@ -1,0 +1,16 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: npm-lint
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: lint
+      image: quay.io/bitnami/node:12
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - npm run lint
+      workingDir: $(workspaces.source.path)

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: webhook-interceptor
+type: Opaque
+stringData:
+  secretToken: s3cr3t@123

@@ -1,0 +1,10 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: welcome-nodejs-github-trigger-binding
+spec:
+  params:
+    - name: service-account
+      value: pipeline-user
+    - name: namespace
+      value: jhomar-welcome-github

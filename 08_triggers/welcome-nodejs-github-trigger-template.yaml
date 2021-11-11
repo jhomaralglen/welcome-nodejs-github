@@ -1,0 +1,56 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: welcome-nodejs-github-trigger-template
+spec:
+  params:
+    - name: service-account
+      description: The ServiceAccount under which to run the Pipeline.
+    - name: git-revision
+    - name: git-driver
+    - name: git-revision
+    - name: git-repo-url
+    - name: git-repo-name
+    - name: git-repo-path
+    - name: git-ref
+    - name: namespace
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: $(tt.params.git-repo-name)-$(tt.params.git-ref)-pipeline-run-
+      spec:
+        serviceAccountName: $(tt.params.service-account)
+        pipelineRef:
+          name: $(tt.params.git-repo-name)-$(tt.params.git-ref)-pipeline
+        resources:
+          - name: git-repo
+            resourceSpec:
+              type: git
+              params:
+              - name: revision
+                value: $(tt.params.git-revision)
+              - name: url
+                value: $(tt.params.git-repo-url)
+          - name: built-image
+            resourceRef:
+              name: built-image
+        params:
+          - name: git-driver
+            value: $(tt.params.git-driver)
+          - name: git-revision
+            value: $(tt.params.git-revision)
+          - name: git-repo-name
+            value: $(tt.params.git-repo-name)
+          - name: git-repo-path
+            value: $(tt.params.git-repo-path)
+          - name: git-repo-url
+            value: $(tt.params.git-repo-url)
+          - name: git-ref
+            value: $(tt.params.git-ref)
+          - name: namespace
+            value: $(tt.params.namespace)
+        workspaces:
+          - name: myworkspace
+            persistentVolumeClaim:
+              claimName: welcome-nodejs-github-pipeline-pvc
